@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block lcontent %}
+	<style type="text/css">
+		.notif{
+				position:fixed;
+				right:30px;
+				top:100px;
+				text-align:center;
+				display:none;
+			}
+	</style>
+	<script type="text/javascript">
+		
+		function server(data) {
+					alert("Welcome" + data.res[0].id);
+		};	
+		
+		$(document).ready(function(){
+				//getData()
+					$("input[value=ok]").on("click", function(){
+						$("#notif").css("display", "inline");
+						$("#notif").css("opacity", "1");
+						$('#notif').animate({
+							opacity: 0.1,
+						}, 4000, function() {
+							alert("Hello");
+							
+						});
+					});
+			});
+			
+			
+				
+			
+			
+			var getData = function(lastupdate) {
+				$.ajax({
+					type: "GET",
+					url: 'http://localhost:8081/?qst=' + '1' + '&asw=' + '1026869',
+					dataType: 'jsonp',
+					crossDomain: true,
+					async: true,
+					cache: false,
+					timeout:300000,
+					success: function(response) {
+						alert("Ok");
+					},
+					error: function(XMLHttpRequest, textStatus, errorThrown){
+						//alert(textStatus + errorThrown);
+						setTimeout('getData('+lastupdate+');', 10000);
+					},
+				});
+			};
+	</script>
+	<div class="alert alert-info notif" id="notif" align="center"><h5>Добавлен новый ответ к вопросу!</h5></div>
+	<input type="submit" value="ok" />
+{% endblock %}

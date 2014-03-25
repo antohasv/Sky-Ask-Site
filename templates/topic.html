@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load ask_extras %}
+
+{% block lcontent %}
+{% for q in questions %}
+<div style="margin-top:50px">
+						<a href="../../qst/{{ q.id }}/" ><h3>{{ q.title }}</h3></a>
+						<a href="" style="color:black"><h4>{{ q.topic }}</h4></a>
+						<p><small>
+							{{ q.content }}
+						</small></p>
+						<hr class="featurette-divider">
+						<div style="font-size:13px">
+							
+							<p class="muted" >
+								<a href="">{{ q.user }}</a>
+								<span style="padding-left:100px">{{ q.date }}</span>
+								<span style="padding-left:100px"><a href="../../qst/{{ q.id }}/">Answers:{{  q|acout }}</a></span>
+								<input type="submit" class="btn btn-success pull-right" id="{{q.id}}" onclick="qplus(this)" value="+"/>
+								<span class="pull-right" style="padding:8px;color:orange" id="q{{q.id}}">{{ q.raiting }}</span>
+								<input type="submit" class="btn btn-danger pull-right" id="{{q.id}}" onclick="qminus(this)" value="-"/>									
+							</p>
+						</div>
+					</div>
+{% endfor %}
+
+<div class="pagination pagination-centered" style="padding-top:30px">
+					  <ul>
+						{% if has_prev %}
+							<li ><a href="./?offset={{ prev }}">Prev</a></li>
+						{% else %}
+							<li class="disabled"><a>Prev</a></li>
+						{% endif %}
+						
+						{% if show_first %}
+							<li ><a href="./?offset=1">1</a></li>
+							<li ><a>...</a></li>
+						{% endif %}
+						
+						{% for i in page_numbers %}
+							{% ifequal i current %}
+								<li class="disabled"><a href="./?offset={{ current }}">{{ current }}</a></li>
+							{% else %}
+								<li><a href="./?offset={{ i }}">{{ i }}</a></li>
+							{% endifequal %}
+						{% endfor %}
+						
+						{% if show_last %}
+							<li ><a>...</a></li>
+							<li ><a href="./?offset={{ pages }}">{{ pages }}</a></li>
+						{% endif %}
+						
+						{% if has_next %}
+							<li><a href="./?offset={{ next }}">Next</a></li>
+						{% else %}
+							<li class="disabled"><a >Next</a></li>
+						{% endif %}
+					  </ul>
+		</div>
+{% endblock %}

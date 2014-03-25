@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% load ask_extras %}
+
+{% block lcontent %}
+	<style type="text/css">
+		.notif{
+				position:fixed;
+				right:10px;
+				top:100px;
+				text-align:center;
+				display:none;
+			}
+	</style>
+	<script type="text/javascript">
+		function server(data)
+		{
+			if(data.status == "ok")
+			{
+				$("maxasw").text(data.res[0].id);
+				$("#notif").css("display", "inline");
+				$("#notif").css("opacity", "1");
+				$('#notif').animate({
+					opacity: 0.1,
+				}, 4000, function() {
+					$("#notif").css("display", "none");
+				});
+			}
+			else if(data.status == "error")
+			{
+				
+			}
+			
+		}
+		
+		function ajaxLike(type, sign, id)
+		{
+			data = "type=" + type + "&sign=" + sign + "&id=" + id;
+			var csrf = $("input[name=csrfmiddlewaretoken]").val();
+			data += "&csrfmiddlewaretoken=" + csrf;
+			$(document).ready(function(){
+					$.ajax({
+						url: "../../like/",
+						type: "POST",
+						data: data,
+						dataType: "text",
+						timeout: 3000,
+						beforeSend: function(){
+							
+						},
+						success: function(answer){
+							obj = JSON.parse(answer.toString());
+							if (obj.status == "ok") {
+								var id = obj.id;
+								if(type == "asw") {
+									if(sign == "plus") {
+										p = "answers div#" + id +" span[name=like]";
+										$(p).text(parseInt($(p).text()) + 1);
+									} else if(sign == "minus") {
+										p = "answers div#" + id +" span[name=like]";
+										$(p).text(parseInt($(p).text()) - 1);
+									}
+								} else if(type == "qst") {
+									if(sign == "plus") {
+										p = "question div#" + id +" span[name=like]";
+										$(p).text(parseInt($(p).text()) + 1);
+									} else if(sign == "minus") {
+										p = "question div#" + id +" span[name=like]";
+										$(p).text(parseInt($(p).text()) - 1);
+									}
+								}
+								
+							} else if(obj.status == "error") {
+								switch(parseInt(obj.code)) {
+									case 1:
+									alert("You have already rated");
+									break;
+									case 2:
+									alert("Answer Doesn't exist");
+									break;
+									case 3:
+									alert("Question Doesn't exist");
+									break;
+									case 4:
+									alert("Uncorrect request");
+									break;
+									case 5:
+									alert("Only for register users");
+									break;
+								}
+							}
+						},
+						error: function(XMLHttpRequest, textStatus, errorThrown){
+							alert("JS:" + textStatus);
+						}
+					});
+				});
+		}
+		
+		function addComment(text, asw_id, user, date, r, user_name) {
+			html = '<div style ="margin-top:100px;">' + text +'<hr class="featurette-divider"><div style="font-size:13px" id=' + asw_id + '>';			
+			html += '<p class="muted" ><a href="' + "../../user/" + user + '">' + user_name + '</a><span style="padding-left:80px">' + date + '</span>';
+			html += '<input type="submit" class="btn btn-success pull-right" f="aplus" value="+"/>';
+			html += '<span class="pull-right" style="padding:8px;color:orange" name="like">' + r + '</span>';
+			html += '<input type="submit" class="btn btn-danger pull-right" f="aminus" value="-"/>';	
+			html += '</p></div></div>';
+			$("answers #end").before(html);
+		}
+		
+		var longpolling = function() {
+				var maxasw = parseInt($("maxasw").text()); 
+				if ($("maxasw").text() == "None")
+				{
+					maxasw = 0;
+				}
+				data = "qst=" + $("question").attr('id') + "&asw=" + maxasw;
+				$.ajax({
+							url: "http://localhost:8081",
+							type:"GET",
+							data: data,
+							dataType:"jsonp",
+							async: true,
+							cache: false,
+							crossDomain: true,
+							timeout: 300000,
+							beforeSend: function(){
+								
+							},
+							
+							success: function(answer){
+								setTimeout('longpolling()', 100);	
+							},
+							error: function(httpReq, textStatus,vThrow){
+								//$("#e_form").css("display", "inline").text(textStatus);
+								setTimeout('longpolling()', 100);
+							}
+						});
+			}
+		
+		function paginator(show_first, start, end)
+		{
+			start = parseInt(start);
+			end = parseInt(end);
+			html = '<ul>';
+					  if (start == end)
+						{
+							html += '<li class="disabled"><a>Prev</a></li>';
+						}
+						else
+						{
+						  html += '<li><a href="./?offset=' + (end - 1) + '">Prev</a></li>';
+						}
+						
+					if(show_first == "True")
+					{
+						html += '<li><a href="./?offset=1">1</a></li><li><a>...</a></li>'
+					}
+					
+					for(i = start; i < end; i++)
+					{
+						html += '<li><a href="./?offset=' + i + '">' + i + '</a></li>';
+					}
+						html += '<li class="disabled"><a href="./?offset=' + end + '">' + end + '</a></li>';
+								
+					html += '<li class="disabled"><a>Next</a></li>';
+					html += '</ul>';
+					$("div[name=paginator]").html(html);
+		}
+		
+		$(document).ready(function(){
+			jQuery.fn.outerHTML = function() {
+				return jQuery("<p>").append(this.clone()).html();
+			}
+			
+			//Long Polling
+			longpolling();	
+			
+			$("input[f=aplus]").on("click", function(){
+					ajaxLike("asw", "plus",$(this).closest('div').attr('id')); 
+			});
+				
+			$("input[f=aminus]").on("click", function(){
+					ajaxLike("asw", "minus",$(this).closest('div').attr('id')); 
+			});
+			
+			$("input[f=qplus]").on("click", function(){
+					ajaxLike("qst", "plus",$(this).closest('div').attr('id')); 
+			});
+				
+			$("input[f=qminus]").on("click", function(){
+					ajaxLike("qst", "minus",$(this).closest('div').attr('id')); 
+			});
+			
+			$("span img[name=right]").on("click", function(){
+					var data = "qid=" + $("question").attr('id') + "&aid=" + $(this).closest('div').attr('id');
+					var csrf = $("input[name=csrfmiddlewaretoken]").val();
+					data += "&csrfmiddlewaretoken=" + csrf;
+					$.ajax({
+						url: "../../right/",
+						type: "POST",
+						data: data,
+						dataType: "text",
+						timeout: 3000,
+						beforeSend: function(){
+							
+						},
+						success: function(answer){
+							obj = JSON.parse(answer.toString());
+							if (obj.status == "ok") {
+								var id = obj.id;
+								window.location.href = window.location.href;
+							} else if((obj.status == "error")) {
+								alert("error");
+							}
+						},
+						error: function(XMLHttpRequest, textStatus, errorThrown){
+							alert("JS:" + textStatus);
+						}
+					});
+			});
+			
+			$("span[f=comment]").on("click", function(){
+				var id = $(this).closest('div').attr('id');
+				$("newcomment > div:first").css("display", "inline");
+				var comment = $("newcomment").html();
+				$("#" + id).append(comment);
+			});
+			
+			
+			
+				$("#form1").submit(function(){
+						var text = $("#form1 > textarea").val();
+						var qst = $("question").attr('id');
+						var csrf = $("input[name=csrfmiddlewaretoken]").val();
+						data = "qst=" + qst + "&text=" + text + "&csrfmiddlewaretoken=" + csrf;
+						$.ajax({
+							url: "../../answers/",
+							type:"POST",
+							data: data,
+							dataType:"text",
+							timeout:3000,
+							beforeSend: function(){
+								
+							},
+							
+							success: function(answer){
+								obj = JSON.parse(answer.toString());
+								$("answers div:first").remove();
+								$("answers").html("<div style = margin-top:50px;><div id=end></div></div>");
+								for(i = 0; i < obj.asw.length; i++)
+								{
+									addComment(obj.asw[i].content, obj.asw[i].id, obj.asw[i].user, obj.asw[i].date, obj.asw[i].raiting, obj.asw[i].user_name);
+								}
+								paginator(obj.pag.show_first, obj.pag.start, obj.pag.end);
+								$("#form1 textarea").val("");
+							
+								$("input[f=aplus]").on("click", function(){
+									ajaxLike("asw", "plus",$(this).closest('div').attr('id')); 
+								});
+									
+								$("input[f=aminus]").on("click", function(){
+										ajaxLike("asw", "minus",$(this).closest('div').attr('id')); 
+								});
+							
+							}	,
+							error: function(httpReq, textStatus,vThrow){
+								$("#e_form").css("display", "inline").text(textStatus);
+							}
+						});
+						
+						return false;
+					});
+			});
+	</script>
+	{% csrf_token %}
+	<div class="alert alert-info notif" id="notif" align="center"><h5>Добавлен новый ответ к вопросу!</h5></div>
+	<maxasw style="display:none">{{ max_asw }}</maxasw>
+	<question id="{{q.id}}">
+		<div style="margin-top:50px">
+			<a href="" ><h3>{{ q.title }}</h3></a>
+			<a href="" style="color:black"><h4>{{ q.topic }}</h4></a>
+			<p><small >
+				{{ q.content }}
+			</small></p>
+			<hr class="featurette-divider">
+			<div style="font-size:13px" id="{{q.id}}">	
+			<p class="muted" >
+				<a href="">{{ q.user }}</a>
+				<span style="padding-left:100px">{{ q.date }}</span>
+				<input type="submit" class="btn btn-success pull-right" f="qplus" value="+"/>
+				<span class="pull-right" style="padding:8px;color:orange" name="like">{{ q.raiting }}</span>
+				<input type="submit" class="btn btn-danger pull-right" f="qminus" value="-"/>	
+			</p>
+				</div>
+		</div>
+	</question>
+	<answers>
+	<div style = "margin-top:50px;">
+		<h3><span id="count">{{  q|acout }}</span> Answers:</h3>
+		</br>
+		{% for i in a %}
+			{% ifequal rightid.0.id i.id %}
+			<div style ="margin-top:50px" class="alert alert-success">
+			{% else %}
+			<div style ="margin-top:50px">
+			{% endifequal %}
+				{{ i.content }}
+				<hr class="featurette-divider">
+				<div style="font-size:13px" id="{{i.id}}">			
+					<p class="muted" >
+						<a href="../../user/{{ i.user.id }}">{{ i.user }}</a>
+						<span style="padding-left:80px">{{ i.date }}</span>
+						<span style="padding-left:100px" f="comment"><a>Comments</a></span>
+						{% if right %}
+							<span style="padding-left:70px"><img src="../../img/ok.png" width="30px" name="right" /></span>
+						{% endif %}
+						<input type="submit" class="btn btn-success pull-right" f="aplus" value="+"/>
+						<span class="pull-right" style="padding:8px;color:orange" name="like">{{ i.raiting }}</span>
+						<input type="submit" class="btn btn-danger pull-right" f="aminus" value="-"/>	
+					</p>
+				</div>
+			</div>
+		{% endfor %}
+			<div id="end"></div>
+	</div>
+	</answers>
+	<newcomment>
+		<div style="margin-left:50px;margin-top:50px;display:none">
+			<form>
+				<img src="../../img/orange.png" width="70px"/>
+				<textarea class="field span5" style="resize:none" rows="3" placeholder="Comments..."></textarea></br>
+				<div style="margin-left:20px">
+					<input class="btn btn-primary" type="submit" value="Добавить"/>
+					<input class="btn btn-link"  style="margin-left:250px" type="submit" value="Загрузить"/>
+				</div>
+			</form>
+		</div>
+	</newcomment>
+	{% if show_paginator %}
+	<div class="pagination pagination-centered" name="paginator" style="padding-top:30px">
+					  <ul>
+						{% if has_prev %}
+							<li ><a href="./?offset={{ prev }}">Prev</a></li>
+						{% else %}
+							<li class="disabled"><a>Prev</a></li>
+						{% endif %}
+						
+						{% if show_first %}
+							<li ><a href="./?offset=1">1</a></li>
+							<li ><a>...</a></li>
+						{% endif %}
+						
+						{% for i in page_numbers %}
+							{% ifequal i current %}
+								<li class="disabled"><a href="./?offset={{ current }}">{{ current }}</a></li>
+							{% else %}
+								<li><a href="./?offset={{ i }}">{{ i }}</a></li>
+							{% endifequal %}
+						{% endfor %}
+						
+						{% if show_last %}
+							<li ><a>...</a></li>
+							<li ><a href="./?offset={{ pages }}">{{ pages }}</a></li>
+						{% endif %}
+						
+						{% if has_next %}
+							<li><a href="./?offset={{ next }}">Next</a></li>
+						{% else %}
+							<li class="disabled"><a >Next</a></li>
+						{% endif %}
+					  </ul>
+		</div>
+	{% endif %}	
+	 {% if sname %}
+		 <div class="span6" style="margin-top:0px">
+		  <div class="alert alert-error" style="display:none" id="e_form">Error</div>
+		  <div class="alert alert-success" style="display:none" id="s_form">Success</div>
+		  <h3>Your answer:</h3>
+			<form method="POST" id="form1">
+				<textarea class="field span6" style="resize:none" rows="6" placeholder="Comments..."></textarea>
+				<input class="btn btn-primary" type="submit" value="Добавить"/>
+				<input class="btn btn-link pull-right" type="submit" value="Загрузить"/>
+			</form>
+		</div>
+	 {% else %}
+		<div class="alert alert-info" style="margin-top:50px">
+			Комментировать могут только <a href="../../reg/">зарегестрированный</a> пользователи
+		</div>
+	 {% endif %}			
+{% endblock %}

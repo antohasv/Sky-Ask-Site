@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block lcontent %}
+{% if not  sname %}
+<script type="text/javascript">
+	$(document).ready(function() {
+		$("form").submit(function(){
+				var name = $("#name").val();
+				var p = $("#password").val();
+				var p1 = new RegExp("^[0-9a-zA-Z_-]+$");
+				var p2 = new RegExp("^[0-9a-zA-Z]+$");
+				var csrf = $("input[name=csrfmiddlewaretoken]").val();
+				
+				if (!p1.test(name)) {
+					$("#error").css("display", "block");
+					$("#error").text("Uncorrect name");
+					return false;
+				}
+					
+				if(!p2.test(p)) {
+					$("#error").css("display", "block");
+					$("#error").text("Uncorrect password");
+					return false;
+				}
+				
+				$.ajax({
+					url:"../sid/",
+					type:"POST",
+					data:"name=" + name + "&pas=" + p + "&csrfmiddlewaretoken=" + csrf,
+					dataType:"text",
+					timeout:3000,
+					beforeSend: function(){
+					},
+					success: function(answer){
+						obj = JSON.parse(answer.toString());
+						if (obj.status == "ok") {
+							window.location.href="../1/";
+						} else if(obj.status == "error") {
+							switch(parseInt(obj.error))
+							{
+								case 1:
+									$("#error").text("Uncorrect Password").css("display", "block");
+									break;
+								case 2:
+									$("#error").text("User does't exist").css("display", "block");
+									break;
+								case 3:
+									$("#error").text("Заполните все поля").css("display", "block");
+									break;
+								case 4:
+									$("#error").text("Поля заполнены непраивльно!").css("display", "block");
+									break;
+							}
+						}
+					},
+					error: function(httpReq, textStatus,vThrow){
+						alert(textStatus);
+					}
+					});
+				return false;
+			});
+	});
+</script>
+
+<div class="alert alert-error" id="error" style="width:240px;display:none"></div>
+<form method="POST" >
+	{% csrf_token %}
+	<div class="control-group">
+		<label class="control-label" for="name">Логин</label>
+		<div class="controls">
+		  <input type="text" id="name" placeholder="Пароль">
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="password">Пароль</label>
+		<div class="controls">
+		  <input type="password" id="password" placeholder="Пароль">
+		</div>
+	</div>
+
+  <div class="control-group">
+    <div class="controls">
+	  <label><input type="checkbox"/><span style="padding-left:10px;">Запоминать меня</span></label>
+      <div style="margin-top:10px">
+		  <button type="submit" class="btn btn-primary" >Войти</button>
+		  <input type="submit" class="btn btn-inf" value="Забыл пароль"/>
+	  </div>
+    </div>
+  </div>
+</form>
+{% else %}
+		<div class="alert alert-info" style="margin-top:50px">
+			You have already register.<a href="../../reg">LogOut</a>.
+		</div>
+{% endif %}
+{% endblock %}

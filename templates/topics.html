@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block lcontent %}
+	<table>
+	{% for topic in top%}
+	<tr>
+		<td>
+			<div style="margin-top:10px"><a href="../topic/{{topic.0.id}}/">{{ topic.0.name }}</a>
+		</td>
+		<td>
+			<span style="margin-left:10px" class="label label-important">x{{ topic.1 }}</span></div>
+		</td>
+	</tr>
+	{% endfor %}
+	</table>
+{% endblock %}

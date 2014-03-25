@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block lcontent %}
+<h3 style="color:orange">ASK!</h3>
+{% if sname %}
+<form align="center" method="POST" action="../addask/">
+	{% csrf_token %}
+	<h3>Title</h3>
+	<input type="text" name="title" placeholder="Title"/></br>
+	<h3>Topic</h3>
+	<select name="topic">
+	{% for i in topics %}
+		<option value="{{i.id}}">{{i.name}}</option>
+	{% endfor %}
+	</select></br>
+	<h3>Question</h3>
+	<textarea class="field span6" style="resize:none" rows="6" name="content" placeholder="Question..."></textarea></br>
+	<input class="btn btn-primary" type="submit" value="Apply"/>
+</form>
+
+{% else %}
+		<div class="alert alert-info" style="margin-top:50px">
+			Задавать вопросы могут только <a href="../../reg">зарегестрированный</a> пользователи
+		</div>
+{% endif %}
+
+{% endblock %}

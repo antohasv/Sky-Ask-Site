@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block lcontent %}
+<!---->
+<div>
+	<div style="margin-bottom:15px"><h3>Name: <a>{{ user.name }}</a></h3></div>
+	<div class="alert alert-block" style="display:inline;">{{ user.raiting }}</div>
+	<div style="margin-top:30px">
+		<h5>E-mail: <a>{{ user.email }}</a></h5>
+		<h5>Date of regestration: <a>{{ user.reg_date }}</a></h5>
+	</div>
+	
+</div>
+<h3>Questions:</h3>
+{% for i in qst %}
+	<a href="../../qst/{{i.id}}/" style="font-size:20px">{{ i.title }}</a></br>
+{% endfor %}
+
+<h3>Answers:</h3>
+<div style="height:500px;overflow:scroll;">
+{% for i in asw %}
+	<a href="../../qst/{{ i.qst.id }}/" style="font-size:20px">{{ i.qst }}</a></br>
+	<a href="../../topic/{{i.qst.topic.id}}/" style="font-size:20px;color:black">{{ i.qst.topic }}</a>
+	</br></br>
+	<p style="margin-left:20px">{{ i.content }}</p>
+	<hr class="divider"/>
+</br>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block lcontent %}
+<script type="text/javascript">
+	$(document).ready(function(){
+			$("form").submit(function(){
+					var rname = new RegExp("^[a-zA-ZА-Яа-я]{0,20}$");
+					var rpwd = new RegExp("^[a-zA-ZА-Яа-я]{0,20}$");
+					var remail = new RegExp("^[a-zA-ZА-Яа-я@\.]{0,20}$");
+					var name = $.trim($("input[name=name]").val());
+					var pwd = $.trim($("input[name=password]").val());
+					var email = $.trim($("input[name=email]").val());
+					if(name && pwd &&  email)
+					{
+						if(!rname.test(name))
+						{
+							$("#error").css("display", "block").text("Имя введенно неправильно.");
+							return false;
+						}
+						
+						if(!rpwd.test(pwd))
+						{
+							$("#error").css("display", "block").text("Пароль введен не правильно.");
+							return false;
+						}
+						
+						if(!remail.test(email))
+						{
+							$("#error").css("display", "block").text("E-mail введен не правильно.");
+							return false;
+						}
+						
+						var csrf = $("input[name=csrfmiddlewaretoken]").val();
+						data = "csrfmiddlewaretoken=" + csrf + "&name=" + name + "&password=" + pwd + "&email=" + email;
+						$.ajax({
+						url: "../testreg/",
+						type: "POST",
+						data: data,
+						dataType: "text",
+						timeout: 3000,
+						beforeSend: function(){
+							
+						},
+						success: function(answer){
+							obj = JSON.parse(answer.toString());
+							if (obj.status == "ok") {
+								window.location.href="../1/";
+							} else if(obj.status == "error") {
+								switch(parseInt(obj.code)) {
+									case 1:
+										$("#error").text("Name Exist").css("display", "block");
+										break;
+									case 2:
+										$("#error").text("Uncorrect data").css("display", "block");
+										break;
+									case 3:
+										$("#error").text("Try again...").css("display", "block");
+										break;
+								}
+							}
+						},
+						error: function(XMLHttpRequest, textStatus, errorThrown){
+							alert("JS:" + textStatus);
+						}
+					});
+					}
+					else
+					{
+						$("#error").css("display", "block").text("Заполните все поля.");
+					}
+					return false;
+				});
+		});
+</script>
+<div id="error" class="alert alert-error" style="display:none;width:500px"></div>
+<form method="POST" action="../testreg">
+	{% csrf_token %}
+	<div class="control-group">
+		<label class="control-label" for="inputEmail">Логин</label>
+		<div class="controls">
+		  <input type="text" name = "name" placeholder="Логин">
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="inputPassword">Пароль</label>
+		<div class="controls">
+		  <input type="password" name="password" id="inputPassword" placeholder="Пароль">
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="inputPassword">E-mail</label>
+		<div class="controls">
+		  <input type="text" name = "email"  placeholder="E-mail">
+		</div>
+	</div>
+  <div class="control-group">
+    <div class="controls">
+      <input type="submit" class="btn btn-primary" style="margin-left:20px" value="Зарегестрироваться"/>
+    </div>
+  </div>
+</form>
+
+{% endblock %}

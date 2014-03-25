@@ -1,0 +1,20 @@
+<html>
+	<head>
+		<title>Test</title>
+		<script src="http://code.jquery.com/jquery-latest.js"></script>
+		<script type="text/javascript">
+			jQuery.fn.outerHTML = function() {
+				return jQuery("<p>").append(this.clone()).html();
+			}
+				$(document).ready(function(){
+					
+				});
+		</script>
+		<link href="../../bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	</head>
+	<body>
+		<div id="0"><span name="top">Text0</span></div>
+		<div name="new"></div>
+		<div id="end"></div>
+	</body>
+</html>
